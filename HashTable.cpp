@@ -109,7 +109,7 @@ void HashTable::display() {
 			while (horizontalCurrent->nextByChain_)
 			{
 				std::cout << "  Элемент цепи " << ++chainCounter << "\n      ";
-				std::cout << horizontalCurrent->key_ << "\n      ";
+				std::cout << "Ключ: " << horizontalCurrent->key_ << "\n      ";
 				horizontalCurrent->lines_->linesListOut();
 				horizontalCurrent = horizontalCurrent->nextByChain_;
 			}
