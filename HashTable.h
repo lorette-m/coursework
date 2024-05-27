@@ -10,7 +10,7 @@ class HashTable
 public:
 
 	HashTable() :
-		tableSize(100), 
+		tableSize(TABLE_SIZE_CONST),
 		numElements(0),
 		tableHead(nullptr)
 	{
@@ -33,6 +33,8 @@ public:
 	void display();
 
 private:
+	const int TABLE_SIZE_CONST = 100;
+
 	struct HashNode {
 		std::string key_;
 		LinesList* lines_;
@@ -59,11 +61,14 @@ private:
 
 	int hashFunction(const std::string& key) const 
 	{
-		std::hash<std::string> hashFunc;
-		return hashFunc(key) % tableSize;
+		std::size_t hash = 0;
+		for (char c : key) {
+			hash = hash * 31 + c; // 31 - это пример простого коэффициента
+		}
+		return hash % tableSize;
 	}
 
-	void insertSorted(HashNode* newNode) 
+	void insertByTable(HashNode* newNode) 
 	{
 		if (!tableHead or tableHead->key_ > newNode->key_) 
 		{
@@ -118,7 +123,7 @@ private:
 					}
 					chainCurrent->nextByChain_ = current;
 				}
-				insertSorted(current);
+				insertByTable(current);
 				current = nextNode;
 			}
 		}

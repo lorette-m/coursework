@@ -29,7 +29,6 @@ public:
 
 private:
 
-	//структура узла: номер строки, предыдущий узел, следующий узел
 	struct LLNode
 	{
 		int number_;

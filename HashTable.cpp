@@ -3,6 +3,7 @@
 void HashTable::insert(std::string& key, int number) 
 {
 	const double LOAD_FACTOR_NUMBER = 0.75;
+
 	if (numElements > tableSize * LOAD_FACTOR_NUMBER) 
 	{
 		rehash();
@@ -19,10 +20,15 @@ void HashTable::insert(std::string& key, int number)
 		while (current->nextByChain_) 
 		{
 			current = current->nextByChain_;
+			if (current->key_ == key)
+			{
+				current->lines_->insertLLNode(number);
+				return;
+			}
 		}
 		current->nextByChain_ = newNode;
 	}
-	insertSorted(newNode);
+	insertByTable(newNode);
 	++numElements;
 }
 
@@ -96,6 +102,18 @@ void HashTable::display() {
 		std::cout << "Строка " << ++tableLineCounter << std::endl;
 		std::cout << "    Ключ: " << current->key_ << "\n    ";
 		current->lines_->linesListOut();
+		HashNode* horizontalCurrent = current->nextByChain_;
+		int chainCounter = 0;
+		if (horizontalCurrent != nullptr)
+		{
+			while (horizontalCurrent->nextByChain_)
+			{
+				std::cout << "  Элемент цепи " << ++chainCounter << "\n      ";
+				std::cout << horizontalCurrent->key_ << "\n      ";
+				horizontalCurrent->lines_->linesListOut();
+				horizontalCurrent = horizontalCurrent->nextByChain_;
+			}
+		}
 		current = current->nextByTable_;
 	}
 	std::cout << std::endl;
