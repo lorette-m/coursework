@@ -11,87 +11,114 @@ public:
 
 	HashTable() :
 		tableSize(100), 
-		numElements(0) 
+		numElements(0),
+		tableHead(nullptr)
 	{
 		table = new HashNode * [tableSize]();
 	}
 
 	~HashTable() {
 		for (size_t i = 0; i < tableSize; ++i) {
-			HashNode* current = table[i];
-			while (current) {
-				HashNode* toDelete = current;
-				current = current->next_;
-				delete toDelete;
-			}
+			delete table[i];
 		}
 		delete[] table;
 	}
 
 	void insert(std::string& key, int number);
+
 	LinesList* search(std::string& key);
+
 	bool remove(std::string& key);
+
 	void display();
 
 private:
 	struct HashNode {
 		std::string key_;
 		LinesList* lines_;
-		HashNode* next_;
-		// Конструктор узла
-		HashNode(std::string key, int number, HashNode* next = nullptr) :
-			key_(key), next_(next)
+		HashNode* nextByChain_;
+		HashNode* nextByTable_;
+
+		HashNode(std::string key, int number, HashNode* nextByChain = nullptr, HashNode* nextByTable = nullptr) :
+			key_(key), nextByChain_(nextByChain), nextByTable_(nextByTable)
 		{
 			lines_ = new LinesList();
 			lines_->insertLLNode(number);
 		}
+
+		~HashNode() 
+		{
+			delete nextByChain_;
+		}
 	};
 
-	int hashFunction(const std::string& key) {
-		int hash = 0;
-		for (char c : key) {
-			hash = (hash * 31 + c);
-		}
-		return std::fabs(hash % tableSize);
+	HashNode** table;
+	HashNode* tableHead;
+	size_t tableSize;
+	size_t numElements;
+
+	int hashFunction(const std::string& key) const 
+	{
+		std::hash<std::string> hashFunc;
+		return hashFunc(key) % tableSize;
 	}
 
-	void insertSorted(HashNode*& head, HashNode* newNode) {
-		if (!head or head->key_ > newNode->key_) {
-			newNode->next_ = head;
-			head = newNode;
+	void insertSorted(HashNode* newNode) 
+	{
+		if (!tableHead or tableHead->key_ > newNode->key_) 
+		{
+			newNode->nextByTable_ = tableHead;
+			tableHead = newNode;
 			return;
 		}
 
-		HashNode* current = head;
-		while (current->next_ and current->next_->key_ <= newNode->key_) {
-			current = current->next_;
+		HashNode* current = tableHead;
+		while (current->nextByTable_ and current->nextByTable_->key_ <= newNode->key_) 
+		{
+			current = current->nextByTable_;
 		}
 		if (current->key_ == newNode->key_)
 		{
 			current->lines_->insertLLNode(newNode->lines_->firstLayerProcessingOut());
 		}
-		else if (current->next_ and current->next_->key_ == newNode->key_)
+		else if (current->nextByTable_ and current->nextByTable_->key_ == newNode->key_)
 		{
-			current->next_->lines_->insertLLNode(newNode->lines_->firstLayerProcessingOut());
+			current->nextByTable_->lines_->insertLLNode(newNode->lines_->firstLayerProcessingOut());
 		}
 		else
 		{
-			newNode->next_ = current->next_;
-			current->next_ = newNode;
+			newNode->nextByTable_ = current->nextByTable_;
+			current->nextByTable_ = newNode;
 		}
 	}
 
-	void rehash() {
+	void rehash() 
+	{
 		size_t oldTableSize = tableSize;
 		tableSize *= 2;
 		HashNode** newTable = new HashNode * [tableSize]();
+		tableHead = nullptr;
 
-		for (size_t i = 0; i < oldTableSize; ++i) {
+		for (size_t i = 0; i < oldTableSize; ++i) 
+		{
 			HashNode* current = table[i];
-			while (current) {
-				HashNode* nextNode = current->next_;
+			while (current) 
+			{
+				HashNode* nextNode = current->nextByChain_;
+				current->nextByChain_ = nullptr;
 				int newIndex = hashFunction(current->key_);
-				insertSorted(newTable[newIndex], current);
+				if (!newTable[newIndex]) 
+				{
+					newTable[newIndex] = current;
+				}
+				else {
+					HashNode* chainCurrent = newTable[newIndex];
+					while (chainCurrent->nextByChain_) {
+						chainCurrent = chainCurrent->nextByChain_;
+					}
+					chainCurrent->nextByChain_ = current;
+				}
+				insertSorted(current);
 				current = nextNode;
 			}
 		}
@@ -99,11 +126,6 @@ private:
 		delete[] table;
 		table = newTable;
 	}
-
-
-	HashNode** table;
-	size_t tableSize;
-	size_t numElements;
 };
 
 #endif
