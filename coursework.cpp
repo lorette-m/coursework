@@ -1,6 +1,8 @@
 ﻿#include <fstream>
-#include <vector>
 #include <sstream>
+
+#include <vector>
+#include <chrono>
 
 #include "HashTable.h"
 
@@ -40,8 +42,11 @@ int main()
                             fixWord += tolower(word[i]);
                         }
                     }
-                    words.push_back(fixWord);
-                    hashTable.insert(fixWord, lineCounter);
+                    if (fixWord != "" and fixWord != " ")
+                    {
+                        words.push_back(fixWord);
+                        hashTable.insert(fixWord, lineCounter);
+                    }
                 }
                 else
                 {
